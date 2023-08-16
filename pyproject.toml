@@ -5,7 +5,6 @@ description = "Tool to rip Canva websites, cleaning them in the process"
 authors = ["Hayden Lau"]
 license = "MIT"
 readme = "README.md"
-packages = [{include = "canva_site_ripper"}]
 
 [tool.poetry.dependencies]
 python = "^3.8"
