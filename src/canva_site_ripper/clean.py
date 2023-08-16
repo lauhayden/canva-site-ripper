@@ -10,6 +10,9 @@ HTML_CLEAN = "Website_cleaned.html"
 CANVA_URL = ""
 NEW_URL = ""
 
+def path_only(url):
+    return urllib.parse.urlparse(url).path.lstrip("/")
+
 def clean(html, orig_url, new_url):
     soup = BeautifulSoup(html, "html.parser")
         
@@ -28,13 +31,13 @@ def clean(html, orig_url, new_url):
     # extract images for download
     # img tags
     for img_tag in soup.find_all("img"):
-        to_download.add(img_tag["src"])
+        to_download.add(path_only(img_tag["src"]))
     # favicons
     for link_tag in soup.find_all("link"):
-        to_download.add(link_tag["href"])
+        to_download.add(path_only(link_tag["href"]))
     # cover image
     for meta_tag in soup.find_all("meta", property="og:image"):
-        to_download.add(meta_tag["content"])
+        to_download.add(path_only(meta_tag["content"]))
         
     # extract fonts for download
     for style_tag in soup.find_all("style"):
@@ -42,7 +45,7 @@ def clean(html, orig_url, new_url):
         # no easy way to parse the CSS :(
         # we'll just match via regex...
         for match in re.finditer("src: url\(([0-9a-z/\.]*)\);", stylesheet):
-            to_download.add(match.group(1))
+            to_download.add(path_only(match.group(1)))
 
     # write result to string...
     string_soup = soup.prettify()

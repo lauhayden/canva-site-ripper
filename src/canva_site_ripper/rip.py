@@ -1,5 +1,5 @@
 import argparse
-import os
+import pathlib
 import urllib.parse
 
 import requests
@@ -24,12 +24,15 @@ def main():
         response = requests.get(download_url)
         downloaded[file_to_download] = response.content
 
-    os.makedirs("cleaned_website", exist_ok=True)
-    with open(os.path.join("cleaned_website", "index.html"), "w") as index_file:
+    basedir = pathlib.Path("cleaned_website")
+    basedir.mkdir(exist_ok=True)
+    with (basedir / "index.html").open("w") as index_file:
         index_file.write(cleaned_html)
-    for path, downloaded_bin in downloaded.items():
-        with open(os.path.join("cleaned_website", path), "wb") as path_file: # TODO: make path fragment os-agnostic
-            path_file.write(downloaded_bin)
+    for download_pathstr, downloaded_bin in downloaded.items():
+        save_path = basedir / pathlib.Path(download_pathstr)
+        save_path.parent.mkdir(exist_ok=True)
+        with save_path.open("wb") as save_file: # TODO: make path fragment os-agnostic
+            save_file.write(downloaded_bin)
 
 if __name__ == "__main__":
     main()
