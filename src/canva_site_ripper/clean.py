@@ -31,6 +31,9 @@ def clean(html, orig_url, new_url):
     # img tags
     for img_tag in soup.find_all("img"):
         to_download.add(path_only(img_tag["src"]))
+        if "srcset" in img_tag.attrs:
+            for srcset_candidate in img_tag["srcset"].split(","):
+                to_download.add(path_only(srcset_candidate.strip().split(" ")[0]))
     # favicons
     for link_tag in soup.find_all("link"):
         to_download.add(path_only(link_tag["href"]))
