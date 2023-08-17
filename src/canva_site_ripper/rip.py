@@ -56,7 +56,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "-f",
         "--file",
-        help="Use this HTML file instead of download directly from Canva.",
+        help="Use this HTML file instead of downloading from Canva as the index.html.",
         type=argparse.FileType("r"),
     )
     parser.add_argument(
@@ -81,12 +81,14 @@ def main() -> None:
         if "canva" in cleaned_html.lower():
             print("Warning: string 'canva' found in cleaned HTML")
 
+        # download all auxiliary files
         responses = {}
         for file_to_download in to_download:
             download_url = urllib.parse.urlunparse(args.canva_url._replace(path=file_to_download))
             response = session.get(download_url)
             responses[file_to_download] = response
 
+        # write everything to disk
         with (args.output_dir / "index.html").open("w") as index_file:
             index_file.write(cleaned_html)
         for download_pathstr, response in responses.items():
