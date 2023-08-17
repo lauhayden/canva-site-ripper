@@ -1,3 +1,5 @@
+"""Main ripping logic"""
+
 import argparse
 import pathlib
 import shutil
@@ -8,7 +10,15 @@ import requests
 from canva_site_ripper import clean
 
 
-def dir_path(argstr):
+def dir_path(argstr: str) -> pathlib.Path:
+    """Parse, delete recursively, and remake the output dir.
+
+    Args:
+        argstr: raw input from the argument
+
+    Returns:
+        the output dir path
+    """
     try:
         path = pathlib.Path(argstr)
         try:
@@ -16,6 +26,7 @@ def dir_path(argstr):
         except FileNotFoundError:
             pass
     except Exception as err:
+        # transform error into ArgumentTypeError for argparse to print appropriate info
         raise argparse.ArgumentTypeError("can't delete existing directory: " + str(err)) from err
     try:
         path.mkdir()
@@ -24,7 +35,12 @@ def dir_path(argstr):
     return path
 
 
-def parse_args():
+def parse_args() -> argparse.Namespace:
+    """Parse command-line arguments.
+
+    Returns:
+        parsed arguments
+    """
     parser = argparse.ArgumentParser(
         "canva-site-ripper", description="Tool for ripping and cleaning Canva websites"
     )
@@ -52,36 +68,35 @@ def parse_args():
     return parser.parse_args()
 
 
-def main():
-    # TODO: use persistent pool with requests?
-    args = parse_args()
-    if args.file:
-        html = args.file
-    else:
-        html = requests.get(urllib.parse.urlunparse(args.canva_url)).text
-    cleaned_html, to_download = clean.clean(html, args.canva_url, args.new_url)
+def main() -> None:
+    """Main function."""
+    with requests.Session() as session:
+        args = parse_args()
+        if args.file:
+            html = args.file
+        else:
+            html = session.get(urllib.parse.urlunparse(args.canva_url)).text
+        cleaned_html, to_download = clean.clean(html, args.canva_url, args.new_url)
 
-    if "canva" in cleaned_html.lower():
-        print("Warning: string 'canva' found in cleaned HTML")
+        if "canva" in cleaned_html.lower():
+            print("Warning: string 'canva' found in cleaned HTML")
 
-    downloaded = {}
-    for file_to_download in to_download:
-        download_url = urllib.parse.urlunparse(args.canva_url._replace(path=file_to_download))
-        response = requests.get(download_url)
-        downloaded[file_to_download] = response.content
+        responses = {}
+        for file_to_download in to_download:
+            download_url = urllib.parse.urlunparse(args.canva_url._replace(path=file_to_download))
+            response = session.get(download_url)
+            responses[file_to_download] = response
 
-    basedir = pathlib.Path("cleaned_website")
-    basedir.mkdir(exist_ok=True)
-    with (basedir / "index.html").open("w") as index_file:
-        index_file.write(cleaned_html)
-    for download_pathstr, downloaded_bin in downloaded.items():
-        save_path = basedir / pathlib.Path(download_pathstr)
-        save_path.parent.mkdir(exist_ok=True)
-        with save_path.open("wb") as save_file:
-            save_file.write(downloaded_bin)
+        with (args.output_dir / "index.html").open("w") as index_file:
+            index_file.write(cleaned_html)
+        for download_pathstr, response in responses.items():
+            save_path = args.output_dir / pathlib.Path(download_pathstr)
+            save_path.parent.mkdir(exist_ok=True)
+            with save_path.open("wb") as save_file:
+                save_file.write(response.content)
 
     if args.no_robots:
-        with (basedir / "robots.txt").open("w") as robots_file:
+        with (args.output_dir / "robots.txt").open("w") as robots_file:
             robots_file.write("User-agent: *\nDisallow: /\n")
 
 

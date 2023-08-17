@@ -1,4 +1,7 @@
+"""Parse and modify the HTML"""
+
 import re
+from typing import Set, TextIO, Tuple
 import urllib.parse
 
 from bs4 import BeautifulSoup
@@ -10,11 +13,33 @@ CANVA_URL = ""
 NEW_URL = ""
 
 
-def path_only(url):
+def path_only(url: str) -> str:
+    """Return only the path portion of a URL without a leading /
+
+    Args:
+        url: unparsed URL string
+
+    Returns:
+        path portion of the URL
+    """
     return urllib.parse.urlparse(url).path.lstrip("/")
 
 
-def clean(html, orig_url, new_url):
+def clean(
+    html: TextIO, orig_url: urllib.parse.ParseResult, new_url: urllib.parse.ParseResult
+) -> Tuple[str, Set[str]]:
+    """Parsing and modifying logic.
+
+    Args:
+        html: text representing the HTML file
+        orig_url: the original canva site URL, in parsed form
+        new_url: the url that the website will be hosted at, in parsed form
+
+    Returns:
+        strsoup: string representation of the modified HTML
+        to_download: a set of paths relative to the original URL to download auxiliary files from
+            (eg. images, fonts)
+    """
     soup = BeautifulSoup(html, "html.parser")
 
     # remove all script tags
@@ -48,7 +73,7 @@ def clean(html, orig_url, new_url):
         stylesheet = style_tag.string
         # no easy way to parse the CSS :(
         # we'll just match via regex...
-        for match in re.finditer("src: url\(([0-9a-z/\.]*)\);", stylesheet):
+        for match in re.finditer(r"src: url\(([0-9a-z/\.]*)\);", stylesheet):
             to_download.add(path_only(match.group(1)))
 
     # write result to string...
