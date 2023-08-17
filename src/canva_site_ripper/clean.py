@@ -1,4 +1,3 @@
-import pprint
 import re
 import urllib.parse
 
@@ -48,11 +47,12 @@ def clean(html, orig_url, new_url):
             to_download.add(path_only(match.group(1)))
 
     # write result to string...
-    string_soup = soup.prettify()
+    # using prettify() messes up the layout somehow
+    string_soup = str(soup)
 
     # replace mentions of the test site...
-    orig_domain = urllib.parse.urlparse(orig_url).netloc
-    new_domain = urllib.parse.urlparse(new_url).netloc
+    orig_domain = orig_url.netloc
+    new_domain = new_url.netloc
     string_soup = string_soup.replace(orig_domain, new_domain)
 
     return string_soup, to_download
