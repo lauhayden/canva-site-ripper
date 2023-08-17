@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "canva-site-ripper"
-version = "0.1.0"
+version = "1.0.0"
 description = "Tool to rip Canva websites, cleaning them in the process"
 authors = ["Hayden Lau"]
 license = "MIT"
