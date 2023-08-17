@@ -9,16 +9,18 @@ HTML_CLEAN = "Website_cleaned.html"
 CANVA_URL = ""
 NEW_URL = ""
 
+
 def path_only(url):
     return urllib.parse.urlparse(url).path.lstrip("/")
 
+
 def clean(html, orig_url, new_url):
     soup = BeautifulSoup(html, "html.parser")
-        
+
     # remove all script tags
     for script_tag in soup.find_all("script"):
         script_tag.decompose()
-        
+
     # unmangle links
     for a_tag in soup.find_all("a"):
         query = urllib.parse.urlparse(a_tag["href"]).query
@@ -40,7 +42,7 @@ def clean(html, orig_url, new_url):
     # cover image
     for meta_tag in soup.find_all("meta", property="og:image"):
         to_download.add(path_only(meta_tag["content"]))
-        
+
     # extract fonts for download
     for style_tag in soup.find_all("style"):
         stylesheet = style_tag.string

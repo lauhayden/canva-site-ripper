@@ -7,6 +7,7 @@ import requests
 
 from canva_site_ripper import clean
 
+
 def dir_path(argstr):
     try:
         path = pathlib.Path(argstr)
@@ -22,14 +23,34 @@ def dir_path(argstr):
         raise argparse.ArgumentTypeError("can't create output directory: " + str(err)) from err
     return path
 
+
 def parse_args():
-    parser = argparse.ArgumentParser("canva-site-ripper", description="Tool for ripping and cleaning Canva websites")
+    parser = argparse.ArgumentParser(
+        "canva-site-ripper", description="Tool for ripping and cleaning Canva websites"
+    )
     parser.add_argument("canva_url", help="URL of the Canva site.", type=urllib.parse.urlparse)
-    parser.add_argument("new_url", help="URL that the site will be hosted on.", type=urllib.parse.urlparse)
-    parser.add_argument("output_dir", help="Directory to save the website files. Existing files will be deleted.", type=dir_path)
-    parser.add_argument("-f", "--file", help="Use this HTML file instead of download directly from Canva.", type=argparse.FileType("r"))
-    parser.add_argument("-r", "--no-robots", action="store_true", help="Add a robots.txt disallowing all crawlers to the output")
+    parser.add_argument(
+        "new_url", help="URL that the site will be hosted on.", type=urllib.parse.urlparse
+    )
+    parser.add_argument(
+        "output_dir",
+        help="Directory to save the website files. Existing files will be deleted.",
+        type=dir_path,
+    )
+    parser.add_argument(
+        "-f",
+        "--file",
+        help="Use this HTML file instead of download directly from Canva.",
+        type=argparse.FileType("r"),
+    )
+    parser.add_argument(
+        "-r",
+        "--no-robots",
+        action="store_true",
+        help="Add a robots.txt disallowing all crawlers to the output",
+    )
     return parser.parse_args()
+
 
 def main():
     # TODO: use persistent pool with requests?
@@ -62,6 +83,7 @@ def main():
     if args.no_robots:
         with (basedir / "robots.txt").open("w") as robots_file:
             robots_file.write("User-agent: *\nDisallow: /\n")
+
 
 if __name__ == "__main__":
     main()
